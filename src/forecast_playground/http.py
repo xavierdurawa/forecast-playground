@@ -14,7 +14,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-_PROJECT_URL = "https://github.com/forecast-playground/forecast-playground"
+_PROJECT_URL = "https://github.com/xavierdurawa/forecast-playground"
 
 
 def user_agent() -> str:
