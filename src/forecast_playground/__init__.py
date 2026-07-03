@@ -11,7 +11,16 @@ from .clock import Clock, LookaheadError
 from .drivers import AnthropicDriver, Driver, OpenAIDriver
 from .scaffold import NAIVE, SUPERFORECASTER, Scaffold
 from .schema import function_to_tool_def, tools_to_openai_schema
-from .scoring import brier_score, log_score, mean_brier, mean_log
+from .calibration import CalibrationBin, CalibrationReport, calibration_report
+from .scoring import (
+    aggregate,
+    brier_score,
+    extremize,
+    log_score,
+    mean_brier,
+    mean_log,
+    trimmed_mean,
+)
 from .sources import (
     AsOfGuarantee,
     Document,
@@ -58,6 +67,12 @@ __all__ = [
     "log_score",
     "mean_brier",
     "mean_log",
+    "trimmed_mean",
+    "extremize",
+    "aggregate",
+    "calibration_report",
+    "CalibrationReport",
+    "CalibrationBin",
     "function_to_tool_def",
     "tools_to_openai_schema",
     "__version__",

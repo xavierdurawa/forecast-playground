@@ -43,3 +43,47 @@ def mean_log(forecasts: list[tuple[float, int]]) -> float:
     if not forecasts:
         return float("nan")
     return sum(log_score(p, o) for p, o in forecasts) / len(forecasts)
+
+
+# --- aggregation primitives ------------------------------------------------
+# Seams for ensembling: run N samples/scaffolds (your harness's job), then combine
+# their probabilities here. These are pure functions — the environment supplies the
+# aggregation math, the consumer supplies the orchestration.
+
+
+def trimmed_mean(probs: list[float], trim: float = 0.1) -> float:
+    """Mean of ``probs`` after dropping the lowest and highest ``trim`` fraction.
+
+    Trimming discards outlier forecasts (a common, robust ensemble step). With
+    ``trim=0`` this is a plain mean. Raises on an empty list.
+    """
+    if not probs:
+        raise ValueError("trimmed_mean of empty list")
+    s = sorted(probs)
+    k = int(len(s) * trim)
+    kept = s[k: len(s) - k] or s  # never trim everything away
+    return sum(kept) / len(kept)
+
+
+def extremize(prob: float, a: float = 1.5) -> float:
+    """Push a probability away from 0.5 by exponent ``a`` (log-odds sharpening).
+
+    Aggregating independent forecasts tends to be underconfident; extremizing with
+    ``a > 1`` corrects that (``a = 1`` is a no-op). Operates in log-odds space and
+    is symmetric around 0.5. Clipped to keep the result in (0, 1).
+    """
+    p = min(max(prob, _EPS), 1 - _EPS)
+    odds = p / (1 - p)
+    ext = odds**a
+    return ext / (1 + ext)
+
+
+def aggregate(probs: list[float], trim: float = 0.1, extremize_a: float = 1.0) -> float:
+    """Combine an ensemble of probabilities: trimmed mean, then optional extremize.
+
+    Args:
+        probs: One probability per ensemble member (samples/scaffolds).
+        trim: Fraction trimmed from each end before averaging.
+        extremize_a: Extremizing exponent applied to the mean (1.0 = off).
+    """
+    return extremize(trimmed_mean(probs, trim=trim), a=extremize_a)

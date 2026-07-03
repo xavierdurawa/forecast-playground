@@ -36,6 +36,7 @@ from forecast_playground import (
     Toolkit,
     WikipediaSource,
     brier_score,
+    calibration_report,
     fetch_resolved_markets,
     mean_brier,
     run_forecast,
@@ -173,6 +174,12 @@ def main() -> None:
         print(f"{'market':9s} mean Brier: {mean_brier(market_pairs):.4f}  "
               f"(market-implied prob at as-of — the bar to beat)")
     print(f"{'always.5':9s} mean Brier: 0.2500  (max-entropy reference)")
+
+    # Calibration matters as much as mean Brier: is a "0.7" really ~70%? Show the
+    # reliability curve per arm (needs enough forecasts per bin to be meaningful).
+    print()
+    for arm in args.arms:
+        print(f"[{arm}] {calibration_report(scores[arm]).table()}")
 
 
 if __name__ == "__main__":
