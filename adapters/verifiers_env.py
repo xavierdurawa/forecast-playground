@@ -1,4 +1,4 @@
-"""verifiers adapter: expose ChronoHarness as an RL/eval Environment.
+"""verifiers adapter: expose ForecastPlayground as an RL/eval Environment.
 
 ``load_environment()`` returns a ``ToolEnv`` whose retrieval tools are time-masked
 per dataset row. The as-of date travels in each row's ``info["as_of"]`` and is
@@ -28,14 +28,14 @@ except ImportError as e:  # pragma: no cover - guidance for a missing optional d
         'pip install -e ".[verifiers]"'
     ) from e
 
-from chrono_harness import (
+from forecast_playground import (
     Clock,
     PageviewsSource,
     PolymarketSource,
     WikipediaSource,
     brier_score,
 )
-from chrono_harness.toolkit import Toolkit
+from forecast_playground.toolkit import Toolkit
 
 _PROB_RE = re.compile(r"PROBABILITY:\s*([0-9]*\.?[0-9]+)", re.IGNORECASE)
 
@@ -79,12 +79,12 @@ class TimeMaskedToolEnv(vf.ToolEnv):
     async def setup_state(self, state: vf.State) -> None:
         info = state.get("info", {}) or {}
         as_of = info.get("as_of")
-        state["chrono_clock"] = Clock.at(as_of) if as_of else Clock.at("2024-01-01")
+        state["fp_clock"] = Clock.at(as_of) if as_of else Clock.at("2024-01-01")
 
     async def call_tool(
         self, tool_name: str, tool_args: dict, tool_call_id: str, **kwargs: Any
     ) -> Any:
-        clock = kwargs.get("state", {}).get("chrono_clock") or Clock.at("2024-01-01")
+        clock = kwargs.get("state", {}).get("fp_clock") or Clock.at("2024-01-01")
         toolkit = self._make_toolkit(clock)
         result = toolkit.call(tool_name, tool_args)
         return vf.types.ToolMessage(

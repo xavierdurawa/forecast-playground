@@ -1,7 +1,7 @@
 """Tests for OpenAI-style tool schema generation."""
 
-from chrono_harness import tools_to_openai_schema
-from chrono_harness.clock import Clock
+from forecast_playground import tools_to_openai_schema
+from forecast_playground.clock import Clock
 
 
 def sample_tool(title: str, limit: int = 5, clock: Clock = None) -> str:

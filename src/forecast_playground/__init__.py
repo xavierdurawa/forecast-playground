@@ -1,4 +1,4 @@
-"""ChronoHarness — a time-masked retrieval harness for AI forecasting.
+"""ForecastPlayground — a time-masked retrieval harness for AI forecasting.
 
 Give a model tools that, as of a frozen date, return only information that existed
 before that date — so it can be trained or evaluated on questions whose answers are

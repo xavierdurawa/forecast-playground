@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from chrono_harness import Clock, WaybackSource
+from forecast_playground import Clock, WaybackSource
 
 
 def _session(cdx_rows=None, avail=None, page_text="<html>archived</html>", cdx_raises=False):

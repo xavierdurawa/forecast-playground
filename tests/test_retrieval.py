@@ -1,6 +1,6 @@
 """Tests for chunk + rank retrieval helpers."""
 
-from chrono_harness.retrieval import chunk_text, score_chunk, top_chunks
+from forecast_playground.retrieval import chunk_text, score_chunk, top_chunks
 
 
 def test_chunk_text_splits_and_respects_size():

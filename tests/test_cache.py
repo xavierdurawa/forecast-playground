@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from chrono_harness import AsOfGuarantee, Clock, Document, ResultCache, Toolkit
+from forecast_playground import AsOfGuarantee, Clock, Document, ResultCache, Toolkit
 
 
 def test_cache_roundtrip_and_miss(tmp_path):

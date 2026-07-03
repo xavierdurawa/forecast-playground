@@ -3,8 +3,8 @@
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
-from chrono_harness import Clock, ResolvedMarket
-from chrono_harness.sources.polymarket import market_prob_at, select_uncertain
+from forecast_playground import Clock, ResolvedMarket
+from forecast_playground.sources.polymarket import market_prob_at, select_uncertain
 
 
 def _hist_session(prob_points):

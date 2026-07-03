@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "chrono-harness"
+name = "forecast-playground"
 version = "0.1.0"
 description = "A time-masked retrieval harness for AI forecasting"
 readme = "README.md"
@@ -21,7 +21,7 @@ mcp = ["fastmcp"]
 dev = ["pytest>=8", "pytest-mock", "ruff"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/chrono_harness"]
+packages = ["src/forecast_playground"]
 
 [tool.ruff]
 line-length = 90

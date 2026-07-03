@@ -14,7 +14,7 @@ the same time-mask (leak-free), never the resolved outcome.
 
 Uses Claude via Bedrock. API calls ≈ N * (number of arms).
 
-Run:  CHRONO_CONTACT=you@example.com python examples/leak_ab_study.py \
+Run:  FORECAST_CONTACT=you@example.com python examples/leak_ab_study.py \
           --n 15 --arms full nomarket --uncertain-only
 """
 
@@ -26,7 +26,7 @@ from datetime import datetime, timedelta, timezone
 
 from anthropic import AnthropicBedrock
 
-from chrono_harness import (
+from forecast_playground import (
     Clock,
     PageviewsSource,
     PolymarketSource,
@@ -38,7 +38,7 @@ from chrono_harness import (
     mean_brier,
     select_uncertain,
 )
-from chrono_harness.agent import run_forecast
+from forecast_playground.agent import run_forecast
 
 # Sonnet 4.6: capable, not as costly as Opus; good for testing.
 MODEL = "global.anthropic.claude-sonnet-4-6"

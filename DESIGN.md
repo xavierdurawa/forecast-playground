@@ -1,4 +1,4 @@
-# ChronoHarness — Design
+# ForecastPlayground — Design
 
 A time-masked retrieval harness for AI forecasting.
 

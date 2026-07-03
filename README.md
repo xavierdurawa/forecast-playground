@@ -1,4 +1,4 @@
-# ChronoHarness
+# ForecastPlayground
 
 A **time-masked retrieval harness** for AI forecasting.
 
@@ -26,13 +26,13 @@ pip install -e ".[dev]"                # core + test tooling
 pip install -e ".[dev,anthropic,verifiers]"   # + Bedrock agent loop + RL env
 ```
 
-Set `CHRONO_CONTACT` (an email or URL) so public-archive requests are polite per
+Set `FORECAST_CONTACT` (an email or URL) so public-archive requests are polite per
 Wikimedia's User-Agent policy; without it a neutral fallback is used.
 
 ## Quickstart
 
 ```python
-from chrono_harness import Clock, WikipediaSource
+from forecast_playground import Clock, WikipediaSource
 
 clock = Clock.at("2024-01-01")          # nothing after this instant is visible
 wiki = WikipediaSource(mode="search")   # full-text search -> as-of article text
@@ -61,8 +61,8 @@ Plus `run_python` (a sandboxed compute tool) for distributions / Monte Carlo / s
 never a model argument), dispatches calls, caches results, and traces every call:
 
 ```python
-from chrono_harness import Clock, Toolkit, WikipediaSource, PolymarketSource, ResultCache
-from chrono_harness.agent import run_forecast          # needs [anthropic]
+from forecast_playground import Clock, Toolkit, WikipediaSource, PolymarketSource, ResultCache
+from forecast_playground.agent import run_forecast          # needs [anthropic]
 from anthropic import AnthropicBedrock
 
 tk = Toolkit(
@@ -89,14 +89,14 @@ questions with configurable arms (`full`, `nomarket`, `unmasked`) and optional
 uncertainty-based question selection. See its module docstring for flags.
 
 ```bash
-CHRONO_CONTACT=you@example.com python examples/leak_ab_study.py \
+FORECAST_CONTACT=you@example.com python examples/leak_ab_study.py \
     --n 15 --arms full nomarket --uncertain-only
 ```
 
 ## Layout
 
 ```
-src/chrono_harness/
+src/forecast_playground/
   clock.py        # the no-lookahead chokepoint
   http.py         # retry/backoff session + polite User-Agent
   cache.py        # simple on-disk result cache

@@ -23,7 +23,7 @@ class ResultCache:
             to turn caching off without changing call sites.
     """
 
-    def __init__(self, directory: str | Path = ".cache/chrono", enabled: bool = True):
+    def __init__(self, directory: str | Path = ".cache/forecast_playground", enabled: bool = True):
         self.dir = Path(directory)
         self.enabled = enabled
         if self.enabled:

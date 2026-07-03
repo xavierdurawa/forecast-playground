@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from chrono_harness import Clock, LookaheadError
+from forecast_playground import Clock, LookaheadError
 
 
 def test_at_parses_bare_date_as_utc_midnight():

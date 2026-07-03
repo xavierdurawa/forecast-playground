@@ -14,18 +14,18 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-_PROJECT_URL = "https://github.com/chrono-harness/chrono-harness"
+_PROJECT_URL = "https://github.com/forecast-playground/forecast-playground"
 
 
 def user_agent() -> str:
     """A polite User-Agent string for public archive APIs.
 
-    Wikimedia's policy asks for a contact; set the ``CHRONO_CONTACT`` env var (an
+    Wikimedia's policy asks for a contact; set the ``FORECAST_CONTACT`` env var (an
     email or URL) for real use. Without it, a neutral non-personal fallback is used
     so nothing personal is baked into the package.
     """
-    contact = os.environ.get("CHRONO_CONTACT", "set CHRONO_CONTACT env var")
-    return f"chrono-harness (forecasting retrieval; {_PROJECT_URL}; {contact})"
+    contact = os.environ.get("FORECAST_CONTACT", "set FORECAST_CONTACT env var")
+    return f"forecast-playground (forecasting retrieval; {_PROJECT_URL}; {contact})"
 
 
 def make_session(

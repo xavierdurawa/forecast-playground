@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from chrono_harness import (
+from forecast_playground import (
     AsOfGuarantee,
     Clock,
     Document,
@@ -11,7 +11,7 @@ from chrono_harness import (
     log_score,
     mean_brier,
 )
-from chrono_harness.agent import _extract_probability
+from forecast_playground.agent import _extract_probability
 
 
 # --- scoring ---------------------------------------------------------------

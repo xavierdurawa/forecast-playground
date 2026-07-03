@@ -6,7 +6,7 @@ as-of dates returns two different revisions, each guaranteed no newer than its C
 Run:  python examples/wikipedia_as_of.py
 """
 
-from chrono_harness import Clock, WikipediaSource
+from forecast_playground import Clock, WikipediaSource
 
 
 def main() -> None:

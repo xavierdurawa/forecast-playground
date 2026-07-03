@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from chrono_harness import Clock, LookaheadError, WikipediaSource
+from forecast_playground import Clock, LookaheadError, WikipediaSource
 
 
 def _mock_session(api_json):

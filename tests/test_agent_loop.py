@@ -6,8 +6,8 @@ loop (force-final-turn, defaulting) with no network or model.
 
 from types import SimpleNamespace
 
-from chrono_harness import Clock, Toolkit
-from chrono_harness.agent import run_forecast
+from forecast_playground import Clock, Toolkit
+from forecast_playground.agent import run_forecast
 
 
 def _block(**kw):
