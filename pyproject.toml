@@ -15,6 +15,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Model drivers: OpenAI SDK reaches any OpenAI-compatible endpoint (OpenAI, vLLM,
+# Ollama, Together, ...); anthropic[bedrock] is the native Anthropic/Bedrock path.
+openai = ["openai>=1.40"]
 anthropic = ["anthropic[bedrock]>=0.40"]  # bedrock extra pulls boto3/botocore
 verifiers = ["verifiers>=0.1.14", "datasets"]
 mcp = ["fastmcp"]

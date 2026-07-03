@@ -91,23 +91,12 @@ class Toolkit:
             )
         return specs
 
-    def anthropic_tools(self) -> list[ToolDef]:
-        """Tool definitions in Anthropic's tool-use format (name/description/input_schema)."""
-        return [
-            {
-                "name": name,
-                "description": desc,
-                "input_schema": {
-                    "type": "object",
-                    "properties": props,
-                    "required": list(props),
-                },
-            }
-            for name, desc, props in self._tool_specs()
-        ]
+    def tool_defs(self) -> list[ToolDef]:
+        """Neutral tool defs: ``{name, description, parameters}`` (JSON Schema).
 
-    def anthropic_tools_as_openai(self) -> list[ToolDef]:
-        """Same tools in OpenAI/verifiers format (name/description/parameters)."""
+        This is the cross-provider form the drivers convert from (OpenAI uses it
+        almost verbatim; the Anthropic driver renames ``parameters`` -> ``input_schema``).
+        """
         return [
             {
                 "name": name,
@@ -119,6 +108,20 @@ class Toolkit:
                 },
             }
             for name, desc, props in self._tool_specs()
+        ]
+
+    # Kept for the verifiers adapter, which expects the OpenAI-style form.
+    anthropic_tools_as_openai = tool_defs
+
+    def anthropic_tools(self) -> list[ToolDef]:
+        """Tool definitions in Anthropic's native format (name/description/input_schema)."""
+        return [
+            {
+                "name": d["name"],
+                "description": d["description"],
+                "input_schema": d["parameters"],
+            }
+            for d in self.tool_defs()
         ]
 
     def _dispatch_map(self) -> dict[str, Callable[[dict[str, Any]], str]]:

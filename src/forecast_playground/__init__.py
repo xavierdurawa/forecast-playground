@@ -5,8 +5,11 @@ before that date — so it can be trained or evaluated on questions whose answer
 now known, without lookahead leakage.
 """
 
+from .agent import Forecast, run_forecast
 from .cache import ResultCache
 from .clock import Clock, LookaheadError
+from .drivers import AnthropicDriver, Driver, OpenAIDriver
+from .scaffold import NAIVE, SUPERFORECASTER, Scaffold
 from .schema import function_to_tool_def, tools_to_openai_schema
 from .scoring import brier_score, log_score, mean_brier, mean_log
 from .sources import (
@@ -43,6 +46,14 @@ __all__ = [
     "Toolkit",
     "ToolCall",
     "ResultCache",
+    "run_forecast",
+    "Forecast",
+    "Driver",
+    "OpenAIDriver",
+    "AnthropicDriver",
+    "Scaffold",
+    "NAIVE",
+    "SUPERFORECASTER",
     "brier_score",
     "log_score",
     "mean_brier",

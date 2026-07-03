@@ -24,10 +24,12 @@ import argparse
 import sys
 from datetime import datetime, timedelta, timezone
 
-from anthropic import AnthropicBedrock
-
 from forecast_playground import (
+    NAIVE,
+    SUPERFORECASTER,
+    AnthropicDriver,
     Clock,
+    OpenAIDriver,
     PageviewsSource,
     PolymarketSource,
     ResultCache,
@@ -36,12 +38,13 @@ from forecast_playground import (
     brier_score,
     fetch_resolved_markets,
     mean_brier,
+    run_forecast,
     select_uncertain,
 )
-from forecast_playground.agent import run_forecast
 
-# Sonnet 4.6: capable, not as costly as Opus; good for testing.
+# Sonnet 4.6 via Bedrock: capable, not as costly as Opus; good for testing.
 MODEL = "global.anthropic.claude-sonnet-4-6"
+SCAFFOLDS = {"naive": NAIVE, "superforecaster": SUPERFORECASTER}
 
 
 def build_toolkit(clock: Clock, *, market: bool, cache: ResultCache) -> Toolkit:
@@ -82,14 +85,32 @@ def main() -> None:
         help="keep only questions with as-of market prob in [0.25, 0.75]",
     )
     ap.add_argument("--pool", type=int, default=40, help="candidate pool to select from")
-    ap.add_argument("--region", default="us-west-2")
-    ap.add_argument("--model", default=MODEL, help="Bedrock model id")
+    ap.add_argument(
+        "--provider",
+        choices=["bedrock", "openai"],
+        default="bedrock",
+        help="bedrock = native Anthropic/Bedrock; openai = any OpenAI-compatible endpoint",
+    )
+    ap.add_argument("--model", default=MODEL, help="model id (default is Bedrock Sonnet 4.6)")
+    ap.add_argument("--base-url", default=None, help="OpenAI-compatible base URL (vLLM/Ollama/...)")
+    ap.add_argument("--region", default="us-west-2", help="AWS region for Bedrock")
+    ap.add_argument(
+        "--scaffold",
+        choices=list(SCAFFOLDS),
+        default="naive",
+        help="forecasting strategy/instructions to wrap the model in",
+    )
     ap.add_argument("--no-cache", action="store_true", help="disable the retrieval cache")
     args = ap.parse_args()
 
-    client = AnthropicBedrock(aws_region=args.region)
+    if args.provider == "openai":
+        driver = OpenAIDriver(base_url=args.base_url)
+    else:
+        driver = AnthropicDriver(aws_region=args.region)
+    scaffold = SCAFFOLDS[args.scaffold]
     now = datetime.now(timezone.utc)
     cache = ResultCache(enabled=not args.no_cache)
+    print(f"provider={args.provider} model={args.model} scaffold={scaffold.name}\n")
 
     def as_of_of(m):
         return m.end_date - timedelta(days=args.lead_days)
@@ -122,7 +143,10 @@ def main() -> None:
             has_market = arm != "nomarket"
             clock = Clock.at(now) if arm == "unmasked" else Clock.at(as_of)
             tk = build_toolkit(clock, market=has_market, cache=cache)
-            fc = run_forecast(client, args.model, make_question(m, market=has_market), tk)
+            fc = run_forecast(
+                driver, args.model, make_question(m, market=has_market), tk,
+                scaffold=scaffold,
+            )
             scores[arm].append((fc.probability, m.outcome))
             b = brier_score(fc.probability, m.outcome)
             ok = sum(c.ok for c in tk.calls)

@@ -55,25 +55,47 @@ than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee
 
 Plus `run_python` (a sandboxed compute tool) for distributions / Monte Carlo / scoring.
 
-## Driving a model
+## Driving a model (any provider)
 
 `Toolkit` binds sources + a Clock into model-callable tools (the Clock is injected,
-never a model argument), dispatches calls, caches results, and traces every call:
+never a model argument), dispatches calls, caches results, and traces every call.
+`run_forecast` drives a model through a **Driver** to a scored probability.
+
+**Bring any model.** The `OpenAIDriver` speaks the OpenAI chat-completions API, which
+OpenAI, vLLM, Ollama, Together, Groq, DeepSeek, and most local servers all expose —
+just point `base_url` at yours. The `AnthropicDriver` is the native Anthropic/Bedrock
+path. No per-provider adapter to write.
 
 ```python
-from forecast_playground import Clock, Toolkit, WikipediaSource, PolymarketSource, ResultCache
-from forecast_playground.agent import run_forecast          # needs [anthropic]
-from anthropic import AnthropicBedrock
+from forecast_playground import (
+    Clock, Toolkit, WikipediaSource, PolymarketSource, ResultCache,
+    run_forecast, OpenAIDriver, AnthropicDriver, SUPERFORECASTER,
+)
 
 tk = Toolkit(
     clock=Clock.at("2024-10-06"),
     sources=[WikipediaSource(mode="search"), PolymarketSource()],
-    cache=ResultCache(),                                # optional on-disk cache
+    cache=ResultCache(),                     # optional on-disk cache
 )
-fc = run_forecast(AnthropicBedrock(), "global.anthropic.claude-sonnet-4-6",
-                  "Will X happen?", tk)
-print(fc.probability)     # a calibrated 0..1 forecast
+
+# OpenAI, or any OpenAI-compatible server:
+driver = OpenAIDriver()                                   # OpenAI (needs [openai])
+driver = OpenAIDriver(base_url="http://localhost:11434/v1")  # local vLLM/Ollama
+# ...or native Anthropic/Bedrock:
+driver = AnthropicDriver(aws_region="us-west-2")          # needs [anthropic]
+
+fc = run_forecast(driver, "gpt-4o-mini", "Will X happen?", tk,
+                  scaffold=SUPERFORECASTER)   # swap the instructions/methodology
+print(fc.probability)                         # a calibrated 0..1 forecast
 ```
+
+### Scaffolds — improving a model without touching its weights
+
+A `Scaffold` is the instructions/methodology wrapped around a fixed model (system
+prompt + how it should reason). Ships `NAIVE` (light-touch baseline) and
+`SUPERFORECASTER` (base-rate-first, both-sides, calibration-aware). Because a
+well-scaffolded base model is what you'd initialize RL from, swapping scaffolds also
+tells you how much forecasting skill is *elicitable* vs. needs training.
 
 ## RL environment (verifiers)
 
@@ -104,7 +126,9 @@ src/forecast_playground/
   schema.py       # plain functions -> OpenAI tool defs
   scoring.py      # Brier / log score (proper scoring rules)
   toolkit.py      # binds sources + Clock into model-callable tools
-  agent.py        # minimal Claude (Bedrock) forecasting loop
+  drivers.py      # OpenAI-compatible + Anthropic/Bedrock model drivers
+  scaffold.py     # swappable instruction/methodology strategies
+  agent.py        # minimal provider-agnostic forecasting loop
   sources/        # wikipedia, pageviews, wayback, polymarket
 adapters/         # verifiers_env.py (RL/eval)
 examples/         # runnable demos
