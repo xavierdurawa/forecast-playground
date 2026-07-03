@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chrono-harness"
+version = "0.1.0"
+description = "A time-masked retrieval harness for AI forecasting"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["forecasting", "reinforcement-learning", "retrieval", "llm", "time-masking"]
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic[bedrock]>=0.40"]  # bedrock extra pulls boto3/botocore
+verifiers = ["verifiers>=0.1.14", "datasets"]
+mcp = ["fastmcp"]
+dev = ["pytest>=8", "pytest-mock", "ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chrono_harness"]
+
+[tool.ruff]
+line-length = 90
+target-version = "py310"
