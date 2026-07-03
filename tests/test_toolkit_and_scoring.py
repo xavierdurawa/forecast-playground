@@ -76,6 +76,34 @@ def test_toolkit_converts_lookahead_to_error_not_crash():
     assert tk.calls[0].ok is False
 
 
+class _LeakySource:
+    """A careless third-party source that returns a future doc WITHOUT guarding."""
+
+    name = "leaky:test"
+    guarantee = AsOfGuarantee.HARD
+
+    def fetch(self, query, clock, **kwargs):
+        # Deliberately does NOT call clock.guard — simulates a buggy BYO tool.
+        return [
+            Document(
+                content="LEAKED FUTURE INFO",
+                timestamp=datetime(2024, 6, 1, tzinfo=timezone.utc),  # after as_of
+                source=self.name,
+            )
+        ]
+
+
+def test_toolkit_enforces_no_leak_even_if_source_forgets_to_guard():
+    """The Toolkit re-guards every document, so a careless BYO tool can't leak."""
+    clock = Clock.at("2024-01-01")
+    tk = Toolkit(clock=clock, sources=[_LeakySource()], enable_python=False)
+    out = tk.call("leaky_search", {"query": "x"})
+    # The future doc is blocked at the toolkit chokepoint, not silently returned.
+    assert "LEAKED" not in out
+    assert "lookahead blocked" in out.lower()
+    assert tk.calls[0].ok is False
+
+
 def test_run_python_tool():
     clock = Clock.at("2024-01-01")
     tk = Toolkit(clock=clock, sources=[])

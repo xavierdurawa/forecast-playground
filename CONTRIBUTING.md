@@ -17,12 +17,16 @@ ruff check src/ tests/ examples/ adapters/
 ## The one rule that matters: don't leak the future
 
 Every retrieval flows through a `Clock`, and no source may return data stamped after
-`clock.as_of`. When adding a **new source**:
+`clock.as_of`. The Toolkit re-guards every `Document` a source returns, so the
+guarantee is enforced structurally — a source that forgets still cannot leak. Your
+job when adding a **new source** is to make that guarantee *true and tight*:
 
-1. Route every candidate timestamp through `clock.guard(ts, source=...)` — it raises
-   `LookaheadError` on lookahead. This is the last line of defense.
-2. Prefer querying the backend with a native "at or before" filter so the guard
-   never has to fire (see `WikipediaSource` `rvstart`, `WaybackSource` CDX `to=`).
+1. Stamp each `Document.timestamp` with when that content actually became available
+   (revision time, snapshot time, filing/trade date). This is the one thing only you
+   can get right — the Toolkit trusts your timestamp, then guards it.
+2. Query the backend with a native "at or before" filter so you don't fetch the
+   future in the first place (see `WikipediaSource` `rvstart`, `WaybackSource` CDX
+   `to=`). Calling `clock.guard(ts, source=...)` yourself is recommended (fail fast).
 3. Declare an honest `AsOfGuarantee`: `HARD` (timestamp is a true upper bound),
    `SOFT` (date-filterable but values may be revised after the date), or `NONE`.
 4. Add a test asserting a query at `T` cannot surface a fact created after `T` — the

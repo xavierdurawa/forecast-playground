@@ -53,9 +53,13 @@ class Document:
 class Source(Protocol):
     """A time-masked data backend.
 
-    Implementations must guarantee that :meth:`fetch` never returns a Document
-    whose ``timestamp`` is after ``clock.as_of`` — and should route every
-    candidate timestamp through ``clock.guard(...)`` so the chokepoint enforces it.
+    A ``fetch`` should query its backend for data as of ``clock.as_of`` and stamp
+    each returned Document with when that content became available. Calling
+    ``clock.guard(ts, ...)`` on each candidate timestamp is recommended (fail fast,
+    with a clear source label). It is not strictly required for leak-safety, though:
+    the Toolkit re-guards every Document a source returns, so even a source that
+    forgets cannot surface a post-as_of result. Getting the ``timestamp`` right is
+    the one thing only the source can do.
     """
 
     name: str

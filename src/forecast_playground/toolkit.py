@@ -136,9 +136,14 @@ class Toolkit:
         docs = src.fetch(args.get("query", ""), self.clock)
         if not docs:
             return f"(no results from {src.name} as of {self.clock.as_of.date()})"
-        # Concatenate documents with their timestamps so the model sees recency.
+        # Enforced chokepoint: re-guard EVERY document's timestamp here, so a source
+        # that forgot (or declined) to call clock.guard() itself still cannot leak a
+        # post-as_of result through the toolkit. This makes the no-lookahead
+        # guarantee structural rather than a discipline each tool must follow —
+        # essential for bring-your-own-tools.
         parts = []
         for d in docs:
+            self.clock.guard(d.timestamp, source=d.source or src.name)
             head = f"[{d.source} | {d.timestamp.date().isoformat()}]"
             parts.append(f"{head}\n{d.content}")
         out = "\n\n".join(parts)
