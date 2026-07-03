@@ -14,9 +14,7 @@ answers are now known, without lookahead leakage. A "cached internet."
 
 To get training signal you want to ask a model about events that have already
 resolved, letting it research using only what was knowable at the time. Future-
-dating questions is leak-free but yields tiny data volume. Time-masking reuses every
-historically-resolved question — **but only if the time-mask is airtight.** That
-airtight mask, applied uniformly across heterogeneous sources, is what this provides.
+dating questions is leak-free but yields tiny data volume. 
 
 ## Install
 
