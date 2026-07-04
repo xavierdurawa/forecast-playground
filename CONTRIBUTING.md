@@ -10,9 +10,24 @@ pip install -e ".[dev]"
 ## Before committing
 
 ```bash
-python -m pytest -q          # tests must pass (network is mocked; runs offline)
+python -m pytest -q          # offline suite: fast, network-mocked, must pass
 ruff check src/ tests/ examples/ adapters/
 ```
+
+Integration tests hit live APIs (and a local model) and are skipped by default:
+
+```bash
+CHRONO_CONTACT=you@example.com pytest -m integration   # live; needs network
+```
+
+The leak-safety matrix (`tests/test_leak_safety.py`) checks every source against
+its real API across several dates — this is the invariant that must never regress.
+
+## Writing a new source
+
+Start from `examples/custom_source_template.py` — a runnable, annotated skeleton.
+Then add one row to `LIVE_SOURCES` in `tests/test_leak_safety.py` so the no-leak
+guarantee is checked for it automatically.
 
 ## The one rule that matters: don't leak the future
 

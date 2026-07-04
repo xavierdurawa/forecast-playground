@@ -7,11 +7,11 @@ now known, without lookahead leakage.
 
 from .agent import Forecast, run_forecast
 from .cache import ResultCache
+from .calibration import CalibrationBin, CalibrationReport, calibration_report
 from .clock import Clock, LookaheadError
 from .drivers import AnthropicDriver, Driver, OpenAIDriver
 from .scaffold import NAIVE, SUPERFORECASTER, Scaffold
 from .schema import function_to_tool_def, tools_to_openai_schema
-from .calibration import CalibrationBin, CalibrationReport, calibration_report
 from .scoring import (
     aggregate,
     brier_score,
@@ -40,44 +40,52 @@ from .toolkit import Toolkit, ToolCall
 
 __version__ = "0.1.0"
 
+# The public API, grouped by role. Everything here is intended for consumers and
+# kept stable; anything not listed (submodule internals) may change without notice.
 __all__ = [
-    "Clock",
+    "__version__",
+    # --- Core: the leak-free foundation ---
+    "Clock",              # the no-lookahead chokepoint
     "LookaheadError",
-    "AsOfGuarantee",
-    "Document",
-    "Source",
+    "Source",             # protocol to implement your own time-masked tool
+    "Document",           # what a Source returns (carries the guarded timestamp)
+    "AsOfGuarantee",      # HARD / SOFT / NONE
+    "Toolkit",            # binds sources + Clock into model-callable tools
+    "ToolCall",           # per-call trace record
+    "ResultCache",        # optional on-disk cache of tool results
+    # --- Sources (all free, keyless) ---
     "WikipediaSource",
     "PageviewsSource",
     "WaybackSource",
     "PolymarketSource",
     "CurrentEventsSource",
     "GDELTNewsSource",
+    # --- Datasets / question selection (Polymarket-backed) ---
     "ResolvedMarket",
     "fetch_resolved_markets",
     "market_prob_at",
     "select_uncertain",
-    "Toolkit",
-    "ToolCall",
-    "ResultCache",
+    # --- Driving a model to a forecast ---
     "run_forecast",
     "Forecast",
-    "Driver",
-    "OpenAIDriver",
-    "AnthropicDriver",
-    "Scaffold",
+    "Driver",             # bring any provider
+    "OpenAIDriver",       # OpenAI-compatible (OpenAI, vLLM, Ollama, ...)
+    "AnthropicDriver",    # native Anthropic / Bedrock
+    "Scaffold",           # swappable instructions/methodology
     "NAIVE",
     "SUPERFORECASTER",
+    # --- Scoring, aggregation, calibration ---
     "brier_score",
     "log_score",
     "mean_brier",
     "mean_log",
-    "trimmed_mean",
+    "trimmed_mean",       # ensemble seam: combine N sampled probabilities
     "extremize",
     "aggregate",
     "calibration_report",
     "CalibrationReport",
     "CalibrationBin",
+    # --- Tool-schema helpers ---
     "function_to_tool_def",
     "tools_to_openai_schema",
-    "__version__",
 ]
