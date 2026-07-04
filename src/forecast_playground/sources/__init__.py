@@ -4,6 +4,7 @@ from .base import AsOfGuarantee, Document, Source
 from .current_events import CurrentEventsSource
 from .fred import FREDSource
 from .gdelt import GDELTNewsSource
+from .noaa import NOAASource
 from .pageviews import PageviewsSource
 from .polymarket import (
     PolymarketSource,
@@ -26,6 +27,7 @@ __all__ = [
     "CurrentEventsSource",
     "GDELTNewsSource",
     "FREDSource",
+    "NOAASource",
     "ResolvedMarket",
     "fetch_resolved_markets",
     "market_prob_at",

@@ -18,6 +18,11 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 - **`FREDSource`** — economic series (GDP, CPI, unemployment, ...) via ALFRED
   vintages, so values are point-in-time-*known*, not later-revised. Needs a free
   `FRED_API_KEY`.
+- **`NOAASource`** — historical daily weather (temp/precip) for a station via NOAA
+  CDO v2. Needs a free `NOAA_TOKEN`.
+- **MCP server** (`adapters/mcp_server.py`) — exposes every source to interactive
+  MCP clients as `<source>(query, as_of)` tools. `as_of` is user-controlled here
+  (exploration); scored-eval leak-safety stays in the Toolkit/verifiers paths.
 - **Calibration reporting** (`calibration_report` → reliability curve + ECE/MCE).
 - **Ensemble aggregation primitives** (`trimmed_mean`, `extremize`, `aggregate`).
 - **Provider-agnostic drivers** (`OpenAIDriver`, `AnthropicDriver`) + swappable

@@ -42,7 +42,7 @@ The `Clock` is the single chokepoint: any source that tries to surface data newe
 than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee**
 (`HARD` / `SOFT` / `NONE`) so a run can restrict itself to leak-free sources.
 
-## Sources (all free; only FRED needs a free API key)
+## Sources (all free; FRED and NOAA need a free API key)
 
 | Source | Returns | Guarantee |
 |---|---|---|
@@ -53,12 +53,23 @@ than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee
 | `CurrentEventsSource` | Wikipedia's curated daily news digest as of a date | HARD |
 | `GDELTNewsSource` | Global news article URLs from the GDELT stream up to a date | HARD |
 | `FREDSource` | Economic series (GDP, CPI, ...) as *published* on a date (ALFRED vintages) | HARD |
+| `NOAASource` | Historical daily weather observations for a station up to a date | HARD |
 
 Plus `run_python` (a sandboxed compute tool) for distributions / Monte Carlo / scoring.
 News comes in two flavors: `CurrentEventsSource` (curated summary, most leak-proof)
 and `GDELTNewsSource` (broad raw article links, back to 2015). All sources are
-keyless except `FREDSource`, which needs a free key in `FRED_API_KEY`
-([get one](https://fred.stlouisfed.org/docs/api/api_key.html)).
+keyless except `FREDSource` (`FRED_API_KEY`,
+[key](https://fred.stlouisfed.org/docs/api/api_key.html)) and `NOAASource`
+(`NOAA_TOKEN`, [token](https://www.ncdc.noaa.gov/cdo-web/token)) — both free.
+
+## Interactive use via MCP
+
+`adapters/mcp_server.py` exposes every source to MCP clients (Claude Desktop,
+Cursor, ...) as `<source>(query, as_of)` tools — ask "what did Wikipedia say about X
+as of 2024-01-01?" and the assistant calls the leak-free tool directly. Needs the
+`mcp` extra. Note: here `as_of` is a *user-controlled* parameter for exploration;
+the enforced leak-free guarantee for scored eval/training lives in the Toolkit and
+verifiers paths, where the environment binds the date.
 
 ## Driving a model (any provider)
 

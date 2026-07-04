@@ -27,6 +27,7 @@ from .sources import (
     Document,
     FREDSource,
     GDELTNewsSource,
+    NOAASource,
     PageviewsSource,
     PolymarketSource,
     ResolvedMarket,
@@ -62,6 +63,7 @@ __all__ = [
     "CurrentEventsSource",
     "GDELTNewsSource",
     "FREDSource",
+    "NOAASource",
     # --- Datasets / question selection (Polymarket-backed) ---
     "ResolvedMarket",
     "fetch_resolved_markets",

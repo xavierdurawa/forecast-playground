@@ -23,6 +23,7 @@ from forecast_playground import (
     Document,
     FREDSource,
     GDELTNewsSource,
+    NOAASource,
     PageviewsSource,
     PolymarketSource,
     Toolkit,
@@ -79,6 +80,18 @@ def test_fred_never_leaks_future(as_of):
         pytest.skip("FRED_API_KEY not set")
     clock = Clock.at(as_of)
     docs = FREDSource().fetch("GDP", clock)
+    for d in docs:
+        assert d.timestamp <= clock.as_of
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("as_of", AS_OF_DATES)
+def test_noaa_never_leaks_future(as_of):
+    """NOAA needs a free CDO token (NOAA_TOKEN); skipped if absent."""
+    if not os.environ.get("NOAA_TOKEN"):
+        pytest.skip("NOAA_TOKEN not set")
+    clock = Clock.at(as_of)
+    docs = NOAASource().fetch("", clock)
     for d in docs:
         assert d.timestamp <= clock.as_of
 
