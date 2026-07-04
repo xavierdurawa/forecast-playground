@@ -23,7 +23,9 @@ from .scoring import (
 )
 from .sources import (
     AsOfGuarantee,
+    CurrentEventsSource,
     Document,
+    GDELTNewsSource,
     PageviewsSource,
     PolymarketSource,
     ResolvedMarket,
@@ -48,6 +50,8 @@ __all__ = [
     "PageviewsSource",
     "WaybackSource",
     "PolymarketSource",
+    "CurrentEventsSource",
+    "GDELTNewsSource",
     "ResolvedMarket",
     "fetch_resolved_markets",
     "market_prob_at",

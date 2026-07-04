@@ -50,8 +50,12 @@ than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee
 | `PageviewsSource` | Daily pageview counts (leak-safe attention signal) | HARD |
 | `WaybackSource` | Any URL as archived at-or-before a date | HARD |
 | `PolymarketSource` | Prediction-market YES-probability history up to a date | HARD |
+| `CurrentEventsSource` | Wikipedia's curated daily news digest as of a date | HARD |
+| `GDELTNewsSource` | Global news article URLs from the GDELT stream up to a date | HARD |
 
 Plus `run_python` (a sandboxed compute tool) for distributions / Monte Carlo / scoring.
+All keyless. News comes in two flavors: `CurrentEventsSource` (curated summary, most
+leak-proof) and `GDELTNewsSource` (broad raw article links, back to 2015).
 
 ## Driving a model (any provider)
 
