@@ -17,7 +17,7 @@ ruff check src/ tests/ examples/ adapters/
 Integration tests hit live APIs (and a local model) and are skipped by default:
 
 ```bash
-CHRONO_CONTACT=you@example.com pytest -m integration   # live; needs network
+pytest -m integration   # live; needs network. Keys/contact auto-load from .env
 ```
 
 The leak-safety matrix (`tests/test_leak_safety.py`) checks every source against

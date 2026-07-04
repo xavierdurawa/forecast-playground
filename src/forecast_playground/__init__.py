@@ -10,6 +10,7 @@ from .cache import ResultCache
 from .calibration import CalibrationBin, CalibrationReport, calibration_report
 from .clock import Clock, LookaheadError
 from .drivers import AnthropicDriver, Driver, OpenAIDriver
+from .env import load_env
 from .scaffold import NAIVE, SUPERFORECASTER, Scaffold
 from .schema import function_to_tool_def, tools_to_openai_schema
 from .scoring import (
@@ -92,4 +93,6 @@ __all__ = [
     # --- Tool-schema helpers ---
     "function_to_tool_def",
     "tools_to_openai_schema",
+    # --- Local config ---
+    "load_env",
 ]

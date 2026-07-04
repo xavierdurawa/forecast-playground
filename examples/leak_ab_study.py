@@ -38,6 +38,7 @@ from forecast_playground import (
     brier_score,
     calibration_report,
     fetch_resolved_markets,
+    load_env,
     mean_brier,
     run_forecast,
     select_uncertain,
@@ -66,6 +67,7 @@ def make_question(m, *, market: bool) -> str:
 
 
 def main() -> None:
+    load_env()  # pick up FRED_API_KEY / NOAA_TOKEN / FORECAST_CONTACT from .env
     # Line-buffer stdout so progress is visible during long sequential runs
     # (otherwise output only appears when the process exits).
     sys.stdout.reconfigure(line_buffering=True)

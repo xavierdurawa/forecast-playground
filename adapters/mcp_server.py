@@ -39,7 +39,10 @@ from forecast_playground import (
     Toolkit,
     WaybackSource,
     WikipediaSource,
+    load_env,
 )
+
+load_env()  # pick up FRED_API_KEY / NOAA_TOKEN / FORECAST_CONTACT from .env
 
 mcp = FastMCP("forecast-playground")
 

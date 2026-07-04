@@ -8,13 +8,10 @@ fast, deterministic, and network-free.
 import pytest
 
 # Auto-load a local .env (gitignored) so integration tests pick up API keys /
-# CHRONO_CONTACT without any manual `export`. Never overrides existing env vars.
-try:
-    from dotenv import load_dotenv
+# FORECAST_CONTACT without any manual `export`. Never overrides existing env vars.
+from forecast_playground import load_env
 
-    load_dotenv()
-except ImportError:
-    pass
+load_env()
 
 
 def pytest_collection_modifyitems(config, items):
