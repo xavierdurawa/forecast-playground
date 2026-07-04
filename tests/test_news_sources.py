@@ -129,10 +129,13 @@ class _FakeScalarParam:
 class _FakeJobConfig:
     def __init__(self, query_parameters=None):
         self.query_parameters = query_parameters or []
+        self.maximum_bytes_billed = None
+        self.dry_run = False
+        self.use_query_cache = True
 
 
-def _install_fake_bigquery(monkeypatch, rows, capture):
-    """Inject a fake google.cloud.bigquery module; record the SQL + params."""
+def _install_fake_bigquery(monkeypatch, rows, capture, dry_run_bytes=12345):
+    """Inject a fake google.cloud.bigquery module; record the SQL + config."""
     import sys
     import types
 
@@ -145,8 +148,11 @@ def _install_fake_bigquery(monkeypatch, rows, capture):
         def query(self, sql, job_config=None):
             capture["sql"] = sql
             capture["params"] = {p.name: p.value for p in job_config.query_parameters}
+            capture["max_bytes"] = job_config.maximum_bytes_billed
+            capture["dry_run"] = job_config.dry_run
             job = MagicMock()
             job.result.return_value = rows
+            job.total_bytes_processed = dry_run_bytes
             return job
 
     bq.Client = _Client
@@ -174,11 +180,15 @@ def test_gdelt_bigquery_builds_query_and_parses_rows(monkeypatch):
     assert len(docs) == 1
     assert docs[0].meta["domain"] == "reuters.com"
     assert docs[0].timestamp <= Clock.at("2024-05-20T00:00:00").as_of
-    # Query construction: capped by as_of, project passed, per-term LIKE params bound.
+    # Query construction: as_of upper bound, partition-pruned window, project, LIKEs.
     assert cap["project"] == "my-proj"
     assert cap["params"]["as_of"] == 20240520000000
+    assert cap["params"]["pstart"] == "2024-05-13" and cap["params"]["pend"] == "2024-05-20"
     assert cap["params"]["t0"] == "%starship%" and cap["params"]["t1"] == "%orbit%"
-    assert "DATE <= @as_of" in cap["sql"]
+    assert "DATE <= @as_of" in cap["sql"] and "_PARTITIONTIME" in cap["sql"]
+    # Cost guardrail: the 2 GB byte cap is applied to the job.
+    assert cap["max_bytes"] == int(2.0 * 1024**3)
+    assert cap["dry_run"] is False
 
 
 def test_gdelt_bigquery_guards_future_row(monkeypatch):
@@ -190,3 +200,20 @@ def test_gdelt_bigquery_guards_future_row(monkeypatch):
     src = GDELTNewsSource(backend="bigquery", bq_project="p")
     with pytest.raises(LookaheadError):
         src.fetch("future", Clock.at("2024-05-20"))
+
+
+def test_gdelt_bigquery_dry_run_estimates_bytes(monkeypatch):
+    cap = {}
+    _install_fake_bigquery(monkeypatch, [], cap, dry_run_bytes=5_000_000)
+    src = GDELTNewsSource(backend="bigquery", bq_project="p")
+    est = src.bigquery_dry_run("election", Clock.at("2024-05-20"))
+    assert est == 5_000_000
+    assert cap["dry_run"] is True  # estimated, not run/billed
+
+
+def test_gdelt_bigquery_byte_cap_configurable(monkeypatch):
+    cap = {}
+    _install_fake_bigquery(monkeypatch, [], cap)
+    src = GDELTNewsSource(backend="bigquery", bq_project="p", bq_max_gb_billed=0.5)
+    src.fetch("x", Clock.at("2024-05-20"))
+    assert cap["max_bytes"] == int(0.5 * 1024**3)

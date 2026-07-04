@@ -43,8 +43,10 @@ _GKG_EPOCH = datetime(2015, 2, 18, 23, 0, 0, tzinfo=timezone.utc)  # first GKG 2
 # GKG is tab-delimited; these 0-based columns hold the domain and the article URL.
 _COL_DOMAIN = 3
 _COL_URL = 4
-# BigQuery public GDELT GKG 2.0 table (same DATE/DocumentIdentifier fields).
-_BQ_TABLE = "gdelt-bq.gdeltv2.gkg"
+# BigQuery public GDELT GKG 2.0 table. Use the DAY-partitioned variant so a date
+# window prunes to just those partitions — the unpartitioned `gkg` scans all years
+# (~200 GB) even with a DATE filter, which blows the free tier.
+_BQ_TABLE = "gdelt-bq.gdeltv2.gkg_partitioned"
 
 
 class GDELTNewsSource:
@@ -59,6 +61,10 @@ class GDELTNewsSource:
         bq_project: bigquery only — GCP project id for billing/quota. Defaults to the
             ``GOOGLE_CLOUD_PROJECT`` env var.
         bq_lookback_days: bigquery only — how far back before the as-of date to search.
+        bq_max_gb_billed: bigquery only — hard ceiling on bytes billed per query. A
+            query estimated to scan more is REJECTED before running (unbilled), so a
+            query can never cost more than this. Default 2 GB (far under the 1 TB/mo
+            free tier). Set None to disable the cap (not recommended).
         session: rawfiles only — optional pre-configured ``requests.Session``.
         timeout: Per-request timeout in seconds (rawfiles).
     """
@@ -72,6 +78,7 @@ class GDELTNewsSource:
         max_results: int = 40,
         bq_project: str | None = None,
         bq_lookback_days: int = 7,
+        bq_max_gb_billed: float | None = 2.0,
         session: requests.Session | None = None,
         timeout: float = 30.0,
     ) -> None:
@@ -81,6 +88,7 @@ class GDELTNewsSource:
         self.slots = slots
         self.max_results = max_results
         self.bq_project = bq_project or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        self.bq_max_gb_billed = bq_max_gb_billed
         self.bq_lookback_days = bq_lookback_days
         self.name = "gdelt"
         self.timeout = timeout
@@ -166,39 +174,68 @@ class GDELTNewsSource:
             ) from e
         return bigquery.Client(project=self.bq_project)
 
-    def _fetch_bigquery(self, terms: list[str], clock: Clock) -> list[Document]:
-        """Query the public GDELT GKG table for matching articles up to the Clock.
+    def _build_query(self, terms: list[str], clock: Clock):
+        """Return (sql, params) for a matching-articles query up to the Clock.
 
-        Uses a parameterized ``WHERE DATE <= @as_of`` (GKG DATE is an int
-        ``YYYYMMDDHHMMSS``), plus a lower bound for cost control and a LIKE per term.
-        The DATE column is the same leak-safe timestamp as the raw files.
+        Prunes by ``_PARTITIONTIME`` over the lookback window (this is what keeps
+        bytes scanned tiny on the day-partitioned table) and additionally filters
+        ``DATE <= @as_of`` for the precise, leak-safe upper bound (GKG DATE is an int
+        ``YYYYMMDDHHMMSS``). DATE is the same leak-safe timestamp as the raw files.
         """
         from google.cloud import bigquery
 
         end = clock.as_of
         start = end - timedelta(days=self.bq_lookback_days)
-        as_of_int = int(end.strftime("%Y%m%d%H%M%S"))
-        start_int = int(start.strftime("%Y%m%d%H%M%S"))
-
-        where = ["DATE <= @as_of", "DATE >= @start"]
+        where = [
+            # Partition pruning: only read the day-partitions in the window.
+            "_PARTITIONTIME BETWEEN TIMESTAMP(@pstart) AND TIMESTAMP(@pend)",
+            # Precise leak-safe upper bound within those partitions.
+            "DATE <= @as_of",
+        ]
         params = [
-            bigquery.ScalarQueryParameter("as_of", "INT64", as_of_int),
-            bigquery.ScalarQueryParameter("start", "INT64", start_int),
+            bigquery.ScalarQueryParameter("pstart", "STRING", start.strftime("%Y-%m-%d")),
+            bigquery.ScalarQueryParameter("pend", "STRING", end.strftime("%Y-%m-%d")),
+            bigquery.ScalarQueryParameter("as_of", "INT64", int(end.strftime("%Y%m%d%H%M%S"))),
             bigquery.ScalarQueryParameter("lim", "INT64", self.max_results),
         ]
         for i, term in enumerate(terms):
             where.append(f"LOWER(DocumentIdentifier) LIKE @t{i}")
-            params.append(
-                bigquery.ScalarQueryParameter(f"t{i}", "STRING", f"%{term}%")
-            )
+            params.append(bigquery.ScalarQueryParameter(f"t{i}", "STRING", f"%{term}%"))
         sql = (
             "SELECT DATE, SourceCommonName, DocumentIdentifier "
             f"FROM `{_BQ_TABLE}` WHERE {' AND '.join(where)} "
             "ORDER BY DATE DESC LIMIT @lim"
         )
-        job = self._bq_client().query(
-            sql, job_config=bigquery.QueryJobConfig(query_parameters=params)
-        )
+        return sql, params
+
+    def _job_config(self, params, *, dry_run: bool = False):
+        """Query job config with the byte-billed cap (and optional dry run)."""
+        from google.cloud import bigquery
+
+        cfg = bigquery.QueryJobConfig(query_parameters=params)
+        if self.bq_max_gb_billed is not None:
+            # Hard ceiling: a query estimated above this is rejected, unbilled.
+            cfg.maximum_bytes_billed = int(self.bq_max_gb_billed * 1024**3)
+        if dry_run:
+            cfg.dry_run = True
+            cfg.use_query_cache = False
+        return cfg
+
+    def bigquery_dry_run(self, query: str, clock: Clock) -> int:
+        """Estimate bytes the query WOULD scan, without running or billing it.
+
+        Returns the byte estimate. Use it to see a query's cost up front (the free
+        tier is 1 TB/month; ``bq_max_gb_billed`` also caps it hard at run time).
+        """
+        terms = [w for w in query.lower().split() if len(w) > 2]
+        sql, params = self._build_query(terms, clock)
+        job = self._bq_client().query(sql, job_config=self._job_config(params, dry_run=True))
+        return int(job.total_bytes_processed or 0)
+
+    def _fetch_bigquery(self, terms: list[str], clock: Clock) -> list[Document]:
+        """Query the public GDELT GKG table for matching articles up to the Clock."""
+        sql, params = self._build_query(terms, clock)
+        job = self._bq_client().query(sql, job_config=self._job_config(params))
         docs: list[Document] = []
         for row in job.result():
             ts = datetime.strptime(str(row["DATE"]), "%Y%m%d%H%M%S").replace(

@@ -7,9 +7,13 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 
 ### Added
 - **GDELT BigQuery backend** — `GDELTNewsSource(backend="bigquery")` queries GDELT's
-  public BigQuery table for efficient multi-year news search (needs a GCP project +
-  the `bigquery` extra). The keyless `rawfiles` backend remains the default. Same
-  leak-safe DATE filtering and `Document` shape either way.
+  day-partitioned public BigQuery table for efficient multi-year news search (needs
+  a GCP project + the `bigquery` extra; keyless auth via ADC). The keyless
+  `rawfiles` backend remains the default. Same leak-safe DATE filtering and
+  `Document` shape either way. Cost-guarded: a hard `maximum_bytes_billed` cap
+  (default 2 GB — over-budget queries are rejected unbilled) plus a
+  `bigquery_dry_run()` estimator. Uses the `_partitioned` table so a date window
+  prunes to ~0.4 GB rather than scanning ~200 GB of the unpartitioned table.
 - **Leak-safety property test** — a parametrized integration test asserting every
   registered source respects the as-of Clock across a range of dates. Adding a
   source means adding one row; the invariant is then guarded automatically.

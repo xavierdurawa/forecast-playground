@@ -64,8 +64,13 @@ keyless except `FREDSource` (`FRED_API_KEY`,
 
 `GDELTNewsSource` has two backends: the default `rawfiles` (keyless; scans recent
 15-min files — best for the hours before a date) and opt-in `bigquery`
-(`GDELTNewsSource(backend="bigquery")`; queries GDELT's public BigQuery table for
-efficient multi-year search — needs a GCP project + the `bigquery` extra).
+(`GDELTNewsSource(backend="bigquery")`; queries GDELT's day-partitioned public
+BigQuery table for efficient multi-year search — needs a GCP project + the
+`bigquery` extra). Auth keylessly via `gcloud auth application-default login`.
+Cost is guarded: each query carries a hard `maximum_bytes_billed` cap (default 2 GB,
+so a query is *rejected unbilled* rather than expensive), and `bigquery_dry_run()`
+estimates a query's bytes before running (a typical 7-day search scans ~0.4 GB, well
+under BigQuery's 1 TB/month free tier).
 
 ## Interactive use via MCP
 

@@ -96,6 +96,24 @@ def test_noaa_never_leaks_future(as_of):
         assert d.timestamp <= clock.as_of
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize("as_of", AS_OF_DATES)
+def test_gdelt_bigquery_never_leaks_future(as_of):
+    """GDELT BigQuery backend needs a GCP project (GOOGLE_CLOUD_PROJECT) + ADC.
+
+    A dry-run first guards cost: skip if the query would scan more than the source's
+    byte cap, so this test can never run an expensive query.
+    """
+    if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+        pytest.skip("GOOGLE_CLOUD_PROJECT not set")
+    clock = Clock.at(as_of)
+    src = GDELTNewsSource(backend="bigquery", bq_lookback_days=3, max_results=5)
+    est_gb = src.bigquery_dry_run("government", clock) / 1024**3
+    assert est_gb <= (src.bq_max_gb_billed or float("inf")), f"query too big: {est_gb:.2f} GB"
+    for d in src.fetch("government", clock):
+        assert d.timestamp <= clock.as_of
+
+
 # --- offline companion: the Toolkit chokepoint catches a leaky source ------
 # This does NOT need network — it proves the structural guarantee holds even for a
 # source that violates the contract, which is the property BYO-tool authors rely on.
