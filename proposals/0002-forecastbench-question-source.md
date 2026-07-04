@@ -1,7 +1,7 @@
 # Proposal 0002 — ForecastBench as a question source (geopolitics/security + looser questions)
 
 **From:** the `superforecaster` harness (a downstream consumer of this env)
-**Status:** request — a working loader prototype exists downstream; asking to promote it into the env.
+**Status:** ACCEPTED & implemented (2026-07-04) — see `src/forecast_playground/sources/forecastbench.py`.
 
 ## Summary
 

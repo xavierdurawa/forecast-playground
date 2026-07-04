@@ -123,6 +123,20 @@ prompt + how it should reason). Ships `NAIVE` (light-touch baseline) and
 well-scaffolded base model is what you'd initialize RL from, swapping scaffolds also
 tells you how much forecasting skill is *elicitable* vs. needs training.
 
+## Scoring
+
+`brier_score` / `log_score` (pure), `calibration_report` (reliability curve +
+ECE/MCE), and ensemble `aggregate` (`trimmed_mean` + `extremize`).
+
+For **looser, non-boolean** questions there's an optional **LLM-as-judge** scorer
+(`judge_forecast`, `[judge]` extra): given a question, the forecaster's probability,
+and the *known resolution*, a model maps what happened onto a soft label in [0, 1]
+and `brier_from_judgment` takes the ordinary Brier distance — so loose questions
+score on the same scale as boolean ones (on boolean questions it *equals* Brier;
+verified to agree to 4 dp on known outcomes). It's non-deterministic and, because it
+scores *after* resolution with no retrieval, explicitly **outside** the leak-safety
+invariant.
+
 ## RL environment (verifiers)
 
 `adapters/verifiers_env.py` exposes `load_environment()` → a `ToolEnv` whose tools

@@ -11,6 +11,7 @@ from .calibration import CalibrationBin, CalibrationReport, calibration_report
 from .clock import Clock, LookaheadError
 from .drivers import AnthropicDriver, Driver, OpenAIDriver
 from .env import load_env
+from .judge import Judgment, brier_from_judgment, judge_forecast, parse_judgment
 from .scaffold import NAIVE, SUPERFORECASTER, Scaffold
 from .schema import function_to_tool_def, tools_to_openai_schema
 from .scoring import (
@@ -97,6 +98,11 @@ __all__ = [
     "calibration_report",
     "CalibrationReport",
     "CalibrationBin",
+    # --- LLM-as-judge scorer (non-deterministic; behind the [judge] extra) ---
+    "judge_forecast",
+    "parse_judgment",
+    "brier_from_judgment",
+    "Judgment",
     # --- Tool-schema helpers ---
     "function_to_tool_def",
     "tools_to_openai_schema",

@@ -6,6 +6,13 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 ## [Unreleased]
 
 ### Added
+- **LLM-as-judge scorer** — `judge_forecast()` (`[judge]` extra) scores looser,
+  non-boolean forecasts: a Driver-based model maps a known resolution onto a soft
+  label in [0, 1] and `brier_from_judgment` (pure) takes the Brier distance — equals
+  Brier on boolean questions, verified to agree with true Brier to 4 dp on known
+  outcomes. Non-deterministic and outside the leak-safety invariant (scores after
+  resolution, no retrieval). Includes a live quality-gate integration test. Proposed
+  in `proposals/0001`.
 - **ForecastBench question source** — `fetch_forecastbench_questions()` loads resolved
   questions (Metaculus / INFER / ACLED + markets; CC BY-SA 4.0, keyless) as
   `ResolvedQuestion(text, as_of=freeze_datetime, outcome, market_prob, ...)`. Adds

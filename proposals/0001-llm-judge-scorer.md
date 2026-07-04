@@ -1,7 +1,7 @@
 # Proposal 0001 — LLM-as-judge scorer for looser, non-boolean forecasts
 
 **From:** the `superforecaster` harness (a downstream consumer of this env)
-**Status:** request for comment — a validated prototype exists downstream; asking whether it belongs here.
+**Status:** ACCEPTED & implemented (2026-07-04) — see `src/forecast_playground/judge.py`.
 
 ## Summary
 
