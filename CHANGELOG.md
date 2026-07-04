@@ -6,6 +6,10 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 ## [Unreleased]
 
 ### Added
+- **GDELT BigQuery backend** — `GDELTNewsSource(backend="bigquery")` queries GDELT's
+  public BigQuery table for efficient multi-year news search (needs a GCP project +
+  the `bigquery` extra). The keyless `rawfiles` backend remains the default. Same
+  leak-safe DATE filtering and `Document` shape either way.
 - **Leak-safety property test** — a parametrized integration test asserting every
   registered source respects the as-of Clock across a range of dates. Adding a
   source means adding one row; the invariant is then guarded automatically.
@@ -39,3 +43,5 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 - News: free news APIs (NewsAPI, Mediastack) are intentionally unsupported — their
   free tiers are recent-only (a rolling window anchored to now) and cannot reach a
   past as-of date.
+- Scope: this is the RL *environment*, not the trainer. Training loops belong in a
+  separate package that consumes the `verifiers` adapter (see README).

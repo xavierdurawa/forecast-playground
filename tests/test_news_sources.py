@@ -4,7 +4,14 @@ import io
 import zipfile
 from unittest.mock import MagicMock
 
-from forecast_playground import Clock, CurrentEventsSource, GDELTNewsSource
+import pytest
+
+from forecast_playground import (
+    Clock,
+    CurrentEventsSource,
+    GDELTNewsSource,
+    LookaheadError,
+)
 
 
 # --- Current Events --------------------------------------------------------
@@ -105,3 +112,81 @@ def test_gdelt_missing_slot_404_skipped():
     session.get.return_value = resp
     src = GDELTNewsSource(slots=2, session=session)
     assert src.fetch("x", Clock.at("2024-05-20T12:00:00")) == []
+
+
+def test_gdelt_bad_backend_rejected():
+    with pytest.raises(ValueError):
+        GDELTNewsSource(backend="nonsense")
+
+
+# --- GDELT BigQuery backend (mocked client — no GCP, no network) -----------
+
+class _FakeScalarParam:
+    def __init__(self, name, type_, value):
+        self.name, self.type_, self.value = name, type_, value
+
+
+class _FakeJobConfig:
+    def __init__(self, query_parameters=None):
+        self.query_parameters = query_parameters or []
+
+
+def _install_fake_bigquery(monkeypatch, rows, capture):
+    """Inject a fake google.cloud.bigquery module; record the SQL + params."""
+    import sys
+    import types
+
+    bq = types.ModuleType("google.cloud.bigquery")
+
+    class _Client:
+        def __init__(self, project=None):
+            capture["project"] = project
+
+        def query(self, sql, job_config=None):
+            capture["sql"] = sql
+            capture["params"] = {p.name: p.value for p in job_config.query_parameters}
+            job = MagicMock()
+            job.result.return_value = rows
+            return job
+
+    bq.Client = _Client
+    bq.ScalarQueryParameter = _FakeScalarParam
+    bq.QueryJobConfig = _FakeJobConfig
+    google = types.ModuleType("google")
+    cloud = types.ModuleType("google.cloud")
+    cloud.bigquery = bq
+    google.cloud = cloud
+    monkeypatch.setitem(sys.modules, "google", google)
+    monkeypatch.setitem(sys.modules, "google.cloud", cloud)
+    monkeypatch.setitem(sys.modules, "google.cloud.bigquery", bq)
+
+
+def test_gdelt_bigquery_builds_query_and_parses_rows(monkeypatch):
+    rows = [
+        {"DATE": 20240519120000, "SourceCommonName": "reuters.com",
+         "DocumentIdentifier": "https://reuters.com/spacex-starship"},
+    ]
+    cap = {}
+    _install_fake_bigquery(monkeypatch, rows, cap)
+    src = GDELTNewsSource(backend="bigquery", bq_project="my-proj", max_results=10)
+    docs = src.fetch("starship orbit", Clock.at("2024-05-20T00:00:00"))
+
+    assert len(docs) == 1
+    assert docs[0].meta["domain"] == "reuters.com"
+    assert docs[0].timestamp <= Clock.at("2024-05-20T00:00:00").as_of
+    # Query construction: capped by as_of, project passed, per-term LIKE params bound.
+    assert cap["project"] == "my-proj"
+    assert cap["params"]["as_of"] == 20240520000000
+    assert cap["params"]["t0"] == "%starship%" and cap["params"]["t1"] == "%orbit%"
+    assert "DATE <= @as_of" in cap["sql"]
+
+
+def test_gdelt_bigquery_guards_future_row(monkeypatch):
+    # A row dated after as_of (shouldn't happen given the WHERE, but the guard is
+    # the last line of defense) must raise rather than leak.
+    rows = [{"DATE": 20241201000000, "SourceCommonName": "x.com",
+             "DocumentIdentifier": "https://x.com/future"}]
+    _install_fake_bigquery(monkeypatch, rows, {})
+    src = GDELTNewsSource(backend="bigquery", bq_project="p")
+    with pytest.raises(LookaheadError):
+        src.fetch("future", Clock.at("2024-05-20"))

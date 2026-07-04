@@ -62,6 +62,11 @@ keyless except `FREDSource` (`FRED_API_KEY`,
 [key](https://fred.stlouisfed.org/docs/api/api_key.html)) and `NOAASource`
 (`NOAA_TOKEN`, [token](https://www.ncdc.noaa.gov/cdo-web/token)) — both free.
 
+`GDELTNewsSource` has two backends: the default `rawfiles` (keyless; scans recent
+15-min files — best for the hours before a date) and opt-in `bigquery`
+(`GDELTNewsSource(backend="bigquery")`; queries GDELT's public BigQuery table for
+efficient multi-year search — needs a GCP project + the `bigquery` extra).
+
 ## Interactive use via MCP
 
 `adapters/mcp_server.py` exposes every source to MCP clients (Claude Desktop,
@@ -119,6 +124,14 @@ tells you how much forecasting skill is *elicitable* vs. needs training.
 are time-masked per dataset row (the as-of date travels in `info["as_of"]`, bound by
 the env, never model-controlled). Scoring uses the Brier score (a proper scoring
 rule). Needs the `verifiers` extra.
+
+**Non-goal: this package is the RL *environment*, not the trainer.** It doesn't ship
+an RL training loop (GPUs, a served model endpoint, GRPO/PPO). To actually train a
+forecaster, point an RL framework (Prime Intellect's `prime-rl`, the `verifiers`
+trainer, TRL) at `load_environment()` from your own training package — the same way
+Gym environments don't ship the RL algorithms. Reward-design tip: use a proper
+scoring rule and do **not** divide GRPO advantages by the group standard deviation
+(it breaks calibration — Bereket & Leskovec / Turtel et al.).
 
 ## Study
 

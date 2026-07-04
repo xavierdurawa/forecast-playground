@@ -21,6 +21,7 @@ openai = ["openai>=1.40"]
 anthropic = ["anthropic[bedrock]>=0.40"]  # bedrock extra pulls boto3/botocore
 verifiers = ["verifiers>=0.1.14", "datasets"]
 mcp = ["fastmcp"]
+bigquery = ["google-cloud-bigquery>=3"]  # optional GDELT news backend (needs a GCP project)
 dev = ["pytest>=8", "pytest-mock", "ruff", "python-dotenv"]
 
 [tool.hatch.build.targets.wheel]
