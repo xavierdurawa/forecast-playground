@@ -21,7 +21,7 @@ openai = ["openai>=1.40"]
 anthropic = ["anthropic[bedrock]>=0.40"]  # bedrock extra pulls boto3/botocore
 verifiers = ["verifiers>=0.1.14", "datasets"]
 mcp = ["fastmcp"]
-dev = ["pytest>=8", "pytest-mock", "ruff"]
+dev = ["pytest>=8", "pytest-mock", "ruff", "python-dotenv"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/forecast_playground"]
