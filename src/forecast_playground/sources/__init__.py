@@ -2,6 +2,11 @@
 
 from .base import AsOfGuarantee, Document, Source
 from .current_events import CurrentEventsSource
+from .forecastbench import (
+    GEO_SOURCES,
+    ResolvedQuestion,
+    fetch_forecastbench_questions,
+)
 from .fred import FREDSource
 from .gdelt import GDELTNewsSource
 from .noaa import NOAASource
@@ -32,4 +37,7 @@ __all__ = [
     "fetch_resolved_markets",
     "market_prob_at",
     "select_uncertain",
+    "ResolvedQuestion",
+    "fetch_forecastbench_questions",
+    "GEO_SOURCES",
 ]

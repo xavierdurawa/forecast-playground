@@ -23,6 +23,7 @@ from .scoring import (
     trimmed_mean,
 )
 from .sources import (
+    GEO_SOURCES,
     AsOfGuarantee,
     CurrentEventsSource,
     Document,
@@ -32,9 +33,11 @@ from .sources import (
     PageviewsSource,
     PolymarketSource,
     ResolvedMarket,
+    ResolvedQuestion,
     Source,
     WaybackSource,
     WikipediaSource,
+    fetch_forecastbench_questions,
     fetch_resolved_markets,
     market_prob_at,
     select_uncertain,
@@ -70,6 +73,10 @@ __all__ = [
     "fetch_resolved_markets",
     "market_prob_at",
     "select_uncertain",
+    # --- Datasets: ForecastBench (Metaculus/INFER/ACLED + markets) ---
+    "ResolvedQuestion",
+    "fetch_forecastbench_questions",
+    "GEO_SOURCES",
     # --- Driving a model to a forecast ---
     "run_forecast",
     "Forecast",

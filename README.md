@@ -138,6 +138,19 @@ Gym environments don't ship the RL algorithms. Reward-design tip: use a proper
 scoring rule and do **not** divide GRPO advantages by the group standard deviation
 (it breaks calibration — Bereket & Leskovec / Turtel et al.).
 
+## Questions (ground truth to forecast)
+
+Two keyless sources of resolved questions with `(text, as_of, outcome)`:
+
+- `fetch_resolved_markets()` — high-volume resolved Polymarket markets.
+- `fetch_forecastbench_questions()` — [ForecastBench](https://github.com/forecastingresearch/forecastbench-datasets)
+  (Metaculus / INFER / ACLED + markets; CC BY-SA 4.0). Adds geopolitics/security and
+  looser analyst-style questions. Each carries a `freeze_datetime` (as-of) and a
+  later `resolution_date`; use `sources=GEO_SOURCES` for the non-market subset.
+
+Set the Clock to a question's `as_of`, let the model research via the HARD retrieval
+sources, and score its probability against the known `outcome`.
+
 ## Study
 
 `examples/leak_ab_study.py` runs a forecasting study over resolved Polymarket

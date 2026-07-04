@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 import pytest
 
 from forecast_playground import (
+    GEO_SOURCES,
     AsOfGuarantee,
     Clock,
     CurrentEventsSource,
@@ -29,6 +30,7 @@ from forecast_playground import (
     Toolkit,
     WaybackSource,
     WikipediaSource,
+    fetch_forecastbench_questions,
     fetch_resolved_markets,
 )
 
@@ -70,6 +72,17 @@ def test_polymarket_never_leaks_future(as_of):
     docs = PolymarketSource().fetch(markets[0].token_id_yes, clock)
     for d in docs:
         assert d.timestamp <= clock.as_of
+
+
+@pytest.mark.integration
+def test_forecastbench_questions_resolve_after_freeze():
+    """Question-source invariant: every question's as_of (freeze) precedes its
+    resolution, and outcomes are clean binary. Keyless live load."""
+    qs = fetch_forecastbench_questions(date="2025-03-02", sources=GEO_SOURCES)
+    assert qs, "expected some geopolitical questions from the live set"
+    for q in qs:
+        assert q.as_of < q.resolution_date
+        assert q.outcome in (0, 1)
 
 
 @pytest.mark.integration

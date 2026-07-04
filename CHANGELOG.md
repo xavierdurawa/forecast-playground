@@ -6,6 +6,13 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 ## [Unreleased]
 
 ### Added
+- **ForecastBench question source** — `fetch_forecastbench_questions()` loads resolved
+  questions (Metaculus / INFER / ACLED + markets; CC BY-SA 4.0, keyless) as
+  `ResolvedQuestion(text, as_of=freeze_datetime, outcome, market_prob, ...)`. Adds
+  geopolitics/security + looser analyst-style questions beyond Polymarket. Joins
+  questions↔resolutions by `(source, id)`, takes the earliest horizon, skips
+  combination questions, and tolerates junk `freeze_datetime_value` fields. Proposed
+  in `proposals/0002`.
 - **GDELT BigQuery backend** — `GDELTNewsSource(backend="bigquery")` queries GDELT's
   day-partitioned public BigQuery table for efficient multi-year news search (needs
   a GCP project + the `bigquery` extra; keyless auth via ADC). The keyless
