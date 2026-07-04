@@ -42,7 +42,7 @@ The `Clock` is the single chokepoint: any source that tries to surface data newe
 than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee**
 (`HARD` / `SOFT` / `NONE`) so a run can restrict itself to leak-free sources.
 
-## Sources (v1 — all free, no API keys)
+## Sources (all free; only FRED needs a free API key)
 
 | Source | Returns | Guarantee |
 |---|---|---|
@@ -52,10 +52,13 @@ than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee
 | `PolymarketSource` | Prediction-market YES-probability history up to a date | HARD |
 | `CurrentEventsSource` | Wikipedia's curated daily news digest as of a date | HARD |
 | `GDELTNewsSource` | Global news article URLs from the GDELT stream up to a date | HARD |
+| `FREDSource` | Economic series (GDP, CPI, ...) as *published* on a date (ALFRED vintages) | HARD |
 
 Plus `run_python` (a sandboxed compute tool) for distributions / Monte Carlo / scoring.
-All keyless. News comes in two flavors: `CurrentEventsSource` (curated summary, most
-leak-proof) and `GDELTNewsSource` (broad raw article links, back to 2015).
+News comes in two flavors: `CurrentEventsSource` (curated summary, most leak-proof)
+and `GDELTNewsSource` (broad raw article links, back to 2015). All sources are
+keyless except `FREDSource`, which needs a free key in `FRED_API_KEY`
+([get one](https://fred.stlouisfed.org/docs/api/api_key.html)).
 
 ## Driving a model (any provider)
 

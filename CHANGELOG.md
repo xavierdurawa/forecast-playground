@@ -15,6 +15,9 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
   checks, skipped by default so the normal run stays offline and fast.
 - **News sources**: `CurrentEventsSource` (Wikipedia's curated daily digest) and
   `GDELTNewsSource` (global article stream, back to 2015) — both free and leak-safe.
+- **`FREDSource`** — economic series (GDP, CPI, unemployment, ...) via ALFRED
+  vintages, so values are point-in-time-*known*, not later-revised. Needs a free
+  `FRED_API_KEY`.
 - **Calibration reporting** (`calibration_report` → reliability curve + ECE/MCE).
 - **Ensemble aggregation primitives** (`trimmed_mean`, `extremize`, `aggregate`).
 - **Provider-agnostic drivers** (`OpenAIDriver`, `AnthropicDriver`) + swappable

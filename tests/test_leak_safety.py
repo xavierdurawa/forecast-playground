@@ -11,6 +11,7 @@ Run with:  pytest -m integration
 chokepoint with a deliberately-leaky fake source — no network needed.)
 """
 
+import os
 from datetime import datetime, timezone
 
 import pytest
@@ -20,6 +21,7 @@ from forecast_playground import (
     Clock,
     CurrentEventsSource,
     Document,
+    FREDSource,
     GDELTNewsSource,
     PageviewsSource,
     PolymarketSource,
@@ -65,6 +67,18 @@ def test_polymarket_never_leaks_future(as_of):
     if not markets:
         pytest.skip("no resolved markets available")
     docs = PolymarketSource().fetch(markets[0].token_id_yes, clock)
+    for d in docs:
+        assert d.timestamp <= clock.as_of
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("as_of", AS_OF_DATES)
+def test_fred_never_leaks_future(as_of):
+    """FRED needs a free API key (FRED_API_KEY); skipped if absent."""
+    if not os.environ.get("FRED_API_KEY"):
+        pytest.skip("FRED_API_KEY not set")
+    clock = Clock.at(as_of)
+    docs = FREDSource().fetch("GDP", clock)
     for d in docs:
         assert d.timestamp <= clock.as_of
 
