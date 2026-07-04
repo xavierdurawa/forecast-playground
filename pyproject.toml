@@ -26,6 +26,11 @@ dev = ["pytest>=8", "pytest-mock", "ruff"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/forecast_playground"]
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: hits live network/APIs (and maybe a model); skipped by default",
+]
+
 [tool.ruff]
 line-length = 90
 target-version = "py310"
