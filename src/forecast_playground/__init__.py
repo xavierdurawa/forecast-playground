@@ -12,6 +12,12 @@ from .clock import Clock, LookaheadError
 from .drivers import AnthropicDriver, Driver, OpenAIDriver
 from .env import load_env
 from .judge import Judgment, brier_from_judgment, judge_forecast, parse_judgment
+from .leakage import (
+    is_leak_safe,
+    min_safe_resolution,
+    register_cutoff,
+    training_cutoff,
+)
 from .scaffold import NAIVE, SUPERFORECASTER, Scaffold
 from .schema import function_to_tool_def, tools_to_openai_schema
 from .scoring import (
@@ -103,6 +109,11 @@ __all__ = [
     "parse_judgment",
     "brier_from_judgment",
     "Judgment",
+    # --- Parametric leakage guard (training-cutoff filter) ---
+    "is_leak_safe",
+    "training_cutoff",
+    "min_safe_resolution",
+    "register_cutoff",
     # --- Tool-schema helpers ---
     "function_to_tool_def",
     "tools_to_openai_schema",

@@ -42,6 +42,18 @@ The `Clock` is the single chokepoint: any source that tries to surface data newe
 than `as_of` raises `LookaheadError`. Every source declares an **as-of guarantee**
 (`HARD` / `SOFT` / `NONE`) so a run can restrict itself to leak-free sources.
 
+### Parametric leakage guard
+
+The Clock masks *retrieval*, but a recent model may simply *know* an old outcome from
+pretraining. `is_leak_safe(resolution_date, model)` gates that: true only when the
+resolution is safely after the model's training cutoff (plus a margin). Cutoffs come
+from [models.dev](https://models.dev) (multi-provider, cached) with
+`register_cutoff(model, date)` overrides; an unknown model is rejected (fail-safe).
+`fetch_forecastbench_questions(..., model=...)` can gate on it directly. (Sobering in
+practice: only ~4 of 75 ForecastBench geo questions are parametrically clean for a
+Jan-2026-cutoff model — most historical-question evals on recent models are largely
+measuring memorization without this filter.)
+
 ## Sources (all free; FRED and NOAA need a free API key)
 
 | Source | Returns | Guarantee |

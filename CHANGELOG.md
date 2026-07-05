@@ -6,6 +6,13 @@ All notable changes to ForecastPlayground. This project is pre-1.0; the public A
 ## [Unreleased]
 
 ### Added
+- **Parametric leakage guard** — `is_leak_safe(resolution_date, model)` +
+  `training_cutoff` / `min_safe_resolution` / `register_cutoff`. The Clock masks
+  retrieval; this catches the model *knowing* an old outcome from pretraining (keep
+  only questions resolving safely after the model's training cutoff + margin).
+  Cutoffs from models.dev (multi-provider, cached) with consumer overrides;
+  unknown-model → reject (fail-safe). `fetch_forecastbench_questions(..., model=...)`
+  gates on it. Pure/deterministic. Proposed in `proposals/0003`.
 - **LLM-as-judge scorer** — `judge_forecast()` (`[judge]` extra) scores looser,
   non-boolean forecasts: a Driver-based model maps a known resolution onto a soft
   label in [0, 1] and `brier_from_judgment` (pure) takes the Brier distance — equals

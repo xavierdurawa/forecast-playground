@@ -76,6 +76,8 @@ def _to_float(value: object) -> float | None:
 def fetch_forecastbench_questions(
     date: str = "2025-03-02",
     sources: tuple[str, ...] | None = None,
+    model: str | None = None,
+    margin_days: int = 90,
     session: requests.Session | None = None,
     timeout: float = 30.0,
 ) -> list[ResolvedQuestion]:
@@ -84,6 +86,10 @@ def fetch_forecastbench_questions(
     Args:
         date: The dated set to load (``YYYY-MM-DD``), matching a published set.
         sources: Restrict to these sources (e.g. ``GEO_SOURCES``). None = all.
+        model: If given, drop questions whose ``resolution_date`` is NOT safely after
+            this model's training cutoff — i.e. keep only *parametrically* leak-safe
+            questions (see ``leakage.is_leak_safe``). Off by default.
+        margin_days: Safety margin past the training cutoff for the ``model`` gate.
 
     Joins questions to resolutions by ``(source, id)`` and takes the earliest
     resolved horizon. Skips combination questions (``combination_of != "N/A"`` or a
@@ -141,4 +147,13 @@ def fetch_forecastbench_questions(
                 background=q.get("background", "") or "",
             )
         )
+
+    if model is not None:
+        # Keep only questions the model can't already know from pretraining.
+        from ..leakage import is_leak_safe
+
+        out = [
+            q for q in out
+            if is_leak_safe(q.resolution_date, model, margin_days=margin_days)
+        ]
     return out

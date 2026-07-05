@@ -127,6 +127,20 @@ def test_gdelt_bigquery_never_leaks_future(as_of):
         assert d.timestamp <= clock.as_of
 
 
+@pytest.mark.integration
+def test_parametric_leakage_guard_live_models_dev():
+    """The training-cutoff guard resolves a real model via live models.dev and gates
+    a recent question as unsafe (parametric leak) — the companion to the Clock."""
+    from forecast_playground import is_leak_safe, training_cutoff
+
+    cut = training_cutoff("global.anthropic.claude-sonnet-4-6")
+    assert cut is not None, "expected a cutoff for a known Claude model from models.dev"
+    # A 2024 event is inside a 2025+ cutoff -> not leak-safe (the live leak we hit).
+    assert is_leak_safe("2024-06-01", "global.anthropic.claude-sonnet-4-6") is False
+    # A far-future resolution is safely after any current cutoff.
+    assert is_leak_safe("2027-01-01", "global.anthropic.claude-sonnet-4-6") is True
+
+
 # --- offline companion: the Toolkit chokepoint catches a leaky source ------
 # This does NOT need network — it proves the structural guarantee holds even for a
 # source that violates the contract, which is the property BYO-tool authors rely on.
